@@ -12,7 +12,10 @@ func (i *HostServiceImpl) CreateHost(ctx context.Context, ins *host.Host) (
 	*host.Host, error) {
 	//logger的用法
 	//直接打印日志
+	i.l.Named("Create").Error("create host")
 	i.l.Error("create host")
+	i.l.Info("create host")
+
 	//带格式化日志打印
 	i.l.Errorf("create host %s ", ins.Name)
 	//如果需要带上一些metat信息。携带额外的meta数据常用与trace系统

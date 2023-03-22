@@ -26,6 +26,14 @@ type HostSet struct {
 	Total int     //分页
 }
 
+//为了hosttest测试用例生成的函数
+func NewHost() *Host {
+	return &Host{
+		Resource: &Resource{},
+		Describe: &Describe{},
+	}
+}
+
 //host模型对象定义
 type Host struct {
 	//资源的公共属性部分

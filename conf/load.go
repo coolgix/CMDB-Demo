@@ -19,7 +19,7 @@ func LoadConfigFromToml(filePath string) error {
 		return fmt.Errorf("load config from file error, path:%s, %s", filePath, err)
 	}
 
-	return nil
+	return LoadGlobal()
 }
 
 //从环境变量加载
@@ -30,6 +30,16 @@ func LoadConfigFromEnv() error {
 	if err != nil {
 		return err
 	}
+	return LoadGlobal()
+}
 
-	return nil
+//加载mysql链接的全局实例
+func LoadGlobal() (err error) {
+
+	//加载db的全局实例
+	db, err = config.MySQL.getDBConn()
+	if err != nil {
+		return err
+	}
+	return
 }

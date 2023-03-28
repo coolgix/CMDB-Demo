@@ -1,5 +1,15 @@
 package conf
 
+import (
+	"context"
+	"database/sql"
+	"fmt"
+	"sync"
+	"time"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
 //定义我们程序需要的配置对象
 
 //定义包的全局config实例对象
@@ -16,6 +26,9 @@ package conf
 //为了程序在运行的时候不被恶意修改，设置为私有变量
 var config *Config
 
+// 全局MySQL 客户端实例
+var db *sql.DB
+
 //如过想获得配置，我们单独提供一个函数
 //全局Config 对象获取函数
 func C() *Config {
@@ -27,7 +40,7 @@ func NewDefaultConfig() *Config {
 	return &Config{
 		App:   NewDefaultApp(),
 		Log:   NewDefaultLog(),
-		Mysql: NewDefaultMySQL(),
+		MySQL: NewDefaultMySQL(),
 	}
 }
 
@@ -36,7 +49,7 @@ func NewDefaultConfig() *Config {
 type Config struct {
 	App   *App   `toml:"app"`
 	Log   *Log   `toml:"log"`
-	Mysql *Mysql `toml:"mysql"`
+	MySQL *MySQL `toml:"mysql"`
 }
 
 //mysql的默认值
@@ -60,8 +73,8 @@ type App struct {
 	//KeyFile   string `toml:"key_file" env:"APP_KEY_FILE"`
 }
 
-func NewDefaultMySQL() *Mysql {
-	return &Mysql{
+func NewDefaultMySQL() *MySQL {
+	return &MySQL{
 		Host:     "127.0.0.1",
 		Port:     "3306",
 		UserName: "demo",
@@ -73,7 +86,7 @@ func NewDefaultMySQL() *Mysql {
 	}
 }
 
-type Mysql struct {
+type MySQL struct {
 	//为了配合读取toml和enc 添加了相关的标签
 	Host     string `toml:"host" env:"MYSQL_HOST"`
 	Port     string `toml:"port" env:"MYSQL_PORT"`
@@ -90,7 +103,56 @@ type Mysql struct {
 	MaxLifeTime int `toml:"max_life_time" env:"MYSQL_MAX_LIFE_TIME"`
 	//最大的一个复用链接时间过了时间会直接回收
 	MaxIdleTime int `toml:"max_idle_time" env:"MYSQL_MAX_idle_TIME"`
-	//lock        sync.Mutex
+
+	// 作为私有变量, 用户与控制GetDB
+	lock sync.Mutex
+}
+
+//分装一个链接db的全局实例
+// 1. 第一种方式, 使用LoadGlobal 在加载时 初始化全局db实例
+// 2. 第二种方式, 惰性加载, 获取DB是，动态判断再初始化
+//防止多个进行竞争需要加锁处理
+func (m *MySQL) GetDB() *sql.DB {
+	// 直接加锁, 锁住临界区
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
+	// 如果实例不存在, 会比较意外，会报错，就初始化一个新的实例
+	if db == nil {
+		conn, err := m.getDBConn()
+		if err != nil {
+			panic(err)
+		}
+		db = conn
+	}
+
+	// 全局变量db就一定存在了
+	return db
+}
+
+//抽象一个mysql的客户端
+// 连接池, driverConn具体的连接对象, 他维护着一个Socket
+// pool []*driverConn, 维护pool里面的连接都是可用的, 定期检查我们的conn健康情况
+// 某一个driverConn已经失效, driverConn.Reset(), 清空该结构体的数据, Reconn获取一个连接, 让该conn借壳存活
+// 避免driverConn结构体的内存申请和释放的一个成本
+func (m *MySQL) getDBConn() (*sql.DB, error) {
+	var err error
+	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8&multiStatements=true", m.UserName, m.Password, m.Host, m.Port, m.Database)
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("connect to mysql<%s> error, %s", dsn, err.Error())
+	}
+
+	db.SetMaxOpenConns(m.MaxOpenConn)
+	db.SetMaxIdleConns(m.MaxIdleConn)
+	db.SetConnMaxLifetime(time.Second * time.Duration(m.MaxLifeTime))
+	db.SetConnMaxIdleTime(time.Second * time.Duration(m.MaxIdleTime))
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
+		return nil, fmt.Errorf("ping mysql<%s> error, %s", dsn, err.Error())
+	}
+	return db, nil
 }
 
 //默认log配置

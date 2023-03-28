@@ -24,6 +24,17 @@ func TestLoadConfigFromEnv(t *testing.T) {
 
 	err := conf.LoadConfigFromEnv()
 	if should.NoError(err) {
-		should.Equal("unit_test", conf.C().Mysql.Database)
+		should.Equal("unit_test", conf.C().MySQL.Database)
+	}
+}
+
+//测试数据库全局链接
+
+func TestGetDB(t *testing.T) {
+	should := assert.New(t)
+	err := conf.LoadConfigFromToml("../etc/demo.toml")
+
+	if should.NoError(err) {
+		conf.C().MySQL.GetDB()
 	}
 }

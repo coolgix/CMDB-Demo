@@ -14,7 +14,7 @@ func TestLoadConfigFromToml(t *testing.T) {
 	//添加
 	err := conf.LoadConfigFromToml("../etc/demo.toml")
 	if should.NoError(err) {
-		should.Equal("demo", conf.C().App.Name, "demo")
+		should.Equal("demo", conf.C().App.Name)
 	}
 }
 
@@ -24,6 +24,6 @@ func TestLoadConfigFromEnv(t *testing.T) {
 
 	err := conf.LoadConfigFromEnv()
 	if should.NoError(err) {
-		should.Equal(conf.C().Mysql.Database, "unit_test")
+		should.Equal("unit_test", conf.C().Mysql.Database)
 	}
 }

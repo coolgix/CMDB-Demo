@@ -33,7 +33,7 @@ func TestCreate(t *testing.T) {
 //初始化测试用例
 func init() {
 	//测试用例的配置文件
-	err := conf.LoadConfigFromToml("../host/apps/etc/demo.toml")
+	err := conf.LoadConfigFromEnv()
 	if err != nil {
 		panic(err)
 	}

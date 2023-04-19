@@ -3,7 +3,7 @@ package impl
 import (
 	"database/sql"
 
-	"github.com/CMDB-Demo/cmd/host"
+	"github.com/CMDB-Demo/apps/host"
 	"github.com/CMDB-Demo/conf"
 	"github.com/infraboard/mcube/logger"
 	"github.com/infraboard/mcube/logger/zap"

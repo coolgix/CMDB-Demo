@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/CMDB-Demo/cmd/host"
-	"github.com/CMDB-Demo/cmd/host/impl"
+	"github.com/CMDB-Demo/apps/host"
+	"github.com/CMDB-Demo/apps/host/impl"
+	"github.com/CMDB-Demo/conf"
 	"github.com/infraboard/mcube/logger/zap"
+	"github.com/stretchr/testify/assert"
 )
 
 //全局var
@@ -18,13 +20,23 @@ var (
 )
 
 func TestCreate(t *testing.T) {
+	should := assert.New(t)
+
 	ins := host.NewHost()
 	ins.Name = "test"
-	service.CreateHost(context.Background(), ins)
+	ins, err := service.CreateHost(context.Background(), ins)
+	if should.NoError(err) {
+		fmt.Println(ins)
+	}
 }
 
 //初始化测试用例
 func init() {
+	//测试用例的配置文件
+	err := conf.LoadConfigFromToml("../host/apps/etc/demo.toml")
+	if err != nil {
+		panic(err)
+	}
 	//没有日志需要初始化全局logger
 	// 为什么不设置为默认打印，因为性能
 	fmt.Println(zap.DevelopmentSetup())

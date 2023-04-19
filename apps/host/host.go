@@ -1,6 +1,15 @@
 package host
 
-import "context"
+import (
+	"context"
+	"time"
+
+	"github.com/go-playground/validator/v10"
+)
+
+var (
+	validate = validator.New()
+)
 
 //定义host的数据模型
 
@@ -42,6 +51,21 @@ type Host struct {
 	*Describe
 }
 
+//定义校验的方法
+//保证数据的格式正确
+func (h *Host) Validate() error {
+
+	//校验规则通过反射在结构体已经定义好的
+	//结构体值的校验
+	return validate.Struct(h)
+}
+
+func (h *Host) InjectDefault() {
+	if h.CreateAt == 0 {
+		h.CreateAt = time.Now().UnixMilli()
+	}
+}
+
 //定义Vendor数据结构
 type Vendor int
 
@@ -55,31 +79,31 @@ const (
 )
 
 type Resource struct {
-	Id     string `json:"id"`     // 全局唯一Id
-	Vendor Vendor `json:"vendor"` // 厂商
-	Region string `json:"region"` // 地域
+	Id     string `json:"id" validate:"required"`     // 全局唯一Id
+	Vendor Vendor `json:"vendor"`                     // 厂商
+	Region string `json:"region" validate:"required"` // 地域
 	//Zone        string            `json:"zone"`        // 区域
 	CreateAt int64 `json:"create_at"` // 创建时间
 	ExpireAt int64 `json:"expire_at"` // 过期时间
 	//Category    string            `json:"category"`    // 种类
-	Type string `json:"type"` // 规格
+	Type string `json:"type" validate:"required"` // 规格
 	//InstanceId  string            `json:"instance_id"` // 实例ID
-	Name        string            `json:"name"`        // 名称
-	Description string            `json:"description"` // 描述
-	Status      string            `json:"status"`      // 服务商中的状态
-	Tags        map[string]string `json:"tags"`        // 标签
-	UpdateAt    int64             `json:"update_at"`   // 更新时间
-	SyncAt      int64             `json:"sync_at"`     // 同步时间
-	Account     string            `json:"accout"`      // 资源所属账号
-	PublicIP    string            `json:"public_ip"`   // 公网IP
-	PrivateIP   string            `json:"private_ip"`  // 内网IP
-	PayType     string            `json:"pay_type"`    // 实例付费方式
+	Name        string            `json:"name" validate:"required"` // 名称
+	Description string            `json:"description"`              // 描述
+	Status      string            `json:"status"`                   // 服务商中的状态
+	Tags        map[string]string `json:"tags"`                     // 标签
+	UpdateAt    int64             `json:"update_at"`                // 更新时间
+	SyncAt      int64             `json:"sync_at"`                  // 同步时间
+	Account     string            `json:"accout"`                   // 资源所属账号
+	PublicIP    string            `json:"public_ip"`                // 公网IP
+	PrivateIP   string            `json:"private_ip"`               // 内网IP
+	PayType     string            `json:"pay_type"`                 // 实例付费方式
 }
 
 type Describe struct {
 	//ResourceId   string `json:"resource_id"`   // 关联Resource
-	CPU          int    `json:"cpu"`           // 核数
-	Memory       int    `json:"memory"`        // 内存
+	CPU          int    `json:"cpu" `          // 核数
+	Memory       int    `json:"memory" `       // 内存
 	GPUAmount    int    `json:"gpu_amount"`    // GPU数量
 	GPUSpec      string `json:"gpu_spec"`      // GPU类型
 	OSType       string `json:"os_type"`       // 操作系统类型，分为Windows和Linux

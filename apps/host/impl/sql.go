@@ -7,25 +7,21 @@ const (
 		id,
 		vendor,
 		region,
-		zone,
 		create_at,
 		expire_at,
-		category,
 		type,
 		name,
 		description,
 		status,
 		update_at,
 		sync_at,
-		sync_accout,
+		accout,
 		public_ip,
 		private_ip,
-		pay_type,
-		resource_hash,
-		describe_hash 
+		pay_type
 	)
 	VALUES
-		(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`
+		(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);`
 
 	// 使用占位符 是为了prepare语句
 	//插入host表
@@ -41,6 +37,4 @@ const (
 	)
 	VALUES
 		(?,?,?,?,?,?,?,?);`
-
-	queryHostSQL = `SELECT * FROM resource as r LEFT JOIN host h ON r.id=h.resource_id`
 )

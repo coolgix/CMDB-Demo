@@ -3,7 +3,7 @@ package impl
 import (
 	"context"
 
-	"github.com/CMDB-Demo/cmd/host"
+	"github.com/CMDB-Demo/apps/host"
 	"github.com/infraboard/mcube/logger"
 )
 
